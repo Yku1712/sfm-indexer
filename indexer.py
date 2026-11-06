@@ -1,14 +1,18 @@
 import os
 import requests
 import csv
+import time
 from datetime import datetime, timezone
 from huggingface_hub import HfApi
 
-print("🚀 STARTING INDEXER V3 (LATEST CODE)")
+print("🚀 STARTING INDEXER V4 (RESILIENT RPCs)")
 
+# Am adăugat RPC-uri publice cunoscute pentru stabilitate
 RPC_URLS = [
-    "https://rpc.aex402.com",
-    "https://api.mainnet-beta.solana.com"
+    "https://solana-rpc.publicnode.com",
+    "https://rpc.ankr.com/solana",
+    "https://api.mainnet-beta.solana.com",
+    "https://rpc.aex402.com"
 ]
 MINT_ADDRESS = "BwUTq7fS6sfUmHDwAiCQZ3asSiPEapW5zDrsbwtapump"
 HF_TOKEN = os.environ.get("HF_TOKEN")
@@ -16,19 +20,16 @@ REPO_ID = "introspector/solfunmeme"
 
 def get_top_holders():
     payload = {"jsonrpc": "2.0", "id": 1, "method": "getTokenLargestAccounts", "params": [MINT_ADDRESS]}
-    headers = {"User-Agent": "Mozilla/5.0"}
+    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
     
     for url in RPC_URLS:
         print(f"Încercăm RPC-ul: {url}")
         try:
             response = requests.post(url, json=payload, headers=headers, timeout=20)
-            print(f"Status HTTP: {response.status_code}")
-            
-            # Afișăm primele 100 de caractere primite, ca să vedem ce ne răspunde serverul
-            print(f"Răspuns brut: {response.text[:100]}")
             
             if response.status_code != 200:
-                print(f"⚠️ Eroare HTTP {response.status_code} de la {url}.")
+                print(f"⚠️ Eroare HTTP {response.status_code} de la {url}. Încercăm următorul...")
+                time.sleep(1) # Pauză mică între încercări
                 continue
                 
             data = response.json()
@@ -41,6 +42,7 @@ def get_top_holders():
             
         except Exception as e:
             print(f"❌ Excepție la {url}: {e}")
+            time.sleep(1)
             
     raise Exception("Toate RPC-urile au eșuat!")
 
