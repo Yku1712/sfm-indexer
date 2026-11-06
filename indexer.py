@@ -28,22 +28,21 @@ def save_to_csv(holders):
 
 def upload_to_hf(filepath):
     if not HF_TOKEN:
-        print("❌ HF_TOKEN lipsește. Nu pot urca fișierul.")
+        print("❌ HF_TOKEN lipsește.")
         return
         
-    print("Se creează Pull Request pe HuggingFace...")
+    print("Se urcă direct pe HuggingFace...")
     api = HfApi()
-    # Aici am adăugat create_pr=True
     api.upload_file(
         path_or_fileobj=filepath,
         path_in_repo="csv/sfm_top_holders.csv",
         repo_id=REPO_ID,
         repo_type="dataset",
         token=HF_TOKEN,
-        commit_message="Auto-update: Top SFM holders (10-min cron)",
-        create_pr=True 
+        commit_message="Auto-update: Top SFM holders (10-min cron)"
+        # Am scos create_pr=True, facem push direct
     )
-    print("✅ Pull Request creat cu succes! Mike trebuie doar să îl aprobe.")
+    print("✅ Upload complet! Datele sunt live pe HuggingFace.")
 
 if __name__ == "__main__":
     holders = get_top_holders()
