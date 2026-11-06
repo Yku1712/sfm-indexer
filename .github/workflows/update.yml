@@ -1,6 +1,8 @@
 name: Update SFM Index
 
 on:
+  push:
+    branches: [ main ]
   schedule:
     - cron: '*/10 * * * *' # Rulează la fiecare 10 minute
   workflow_dispatch:      # Permite rularea manuală din buton
