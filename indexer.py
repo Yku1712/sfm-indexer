@@ -1,11 +1,11 @@
 import os
 import requests
 import csv
-import time
 from datetime import datetime, timezone
 from huggingface_hub import HfApi
 
-# Adăugăm un fallback: dacă RPC-ul lui Mike e blocat, folosim RPC-ul oficial Solana
+print("🚀 STARTING INDEXER V3 (LATEST CODE)")
+
 RPC_URLS = [
     "https://rpc.aex402.com",
     "https://api.mainnet-beta.solana.com"
@@ -16,17 +16,19 @@ REPO_ID = "introspector/solfunmeme"
 
 def get_top_holders():
     payload = {"jsonrpc": "2.0", "id": 1, "method": "getTokenLargestAccounts", "params": [MINT_ADDRESS]}
-    # Un User-Agent real previne blocarea de către providerii RPC
-    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
+    headers = {"User-Agent": "Mozilla/5.0"}
     
     for url in RPC_URLS:
         print(f"Încercăm RPC-ul: {url}")
         try:
             response = requests.post(url, json=payload, headers=headers, timeout=20)
+            print(f"Status HTTP: {response.status_code}")
             
-            # Dacă primim altceva decât 200 OK, afișăm textul primit
+            # Afișăm primele 100 de caractere primite, ca să vedem ce ne răspunde serverul
+            print(f"Răspuns brut: {response.text[:100]}")
+            
             if response.status_code != 200:
-                print(f"⚠️ Eroare HTTP {response.status_code} de la {url}. Răspuns: {response.text[:200]}")
+                print(f"⚠️ Eroare HTTP {response.status_code} de la {url}.")
                 continue
                 
             data = response.json()
@@ -37,8 +39,6 @@ def get_top_holders():
             print(f"✅ Succes cu {url}")
             return data["result"]["value"]
             
-        except requests.exceptions.JSONDecodeError:
-            print(f"❌ Eroare de parsare JSON de la {url}. Răspuns brut: {response.text[:200]}")
         except Exception as e:
             print(f"❌ Excepție la {url}: {e}")
             
@@ -58,7 +58,6 @@ def upload_to_hf(filepath):
     if not HF_TOKEN:
         print("❌ HF_TOKEN lipsește.")
         return
-        
     print("Se urcă direct pe HuggingFace...")
     api = HfApi()
     api.upload_file(
@@ -67,9 +66,9 @@ def upload_to_hf(filepath):
         repo_id=REPO_ID,
         repo_type="dataset",
         token=HF_TOKEN,
-        commit_message="Auto-update: Top SFM holders (10-min cron)"
+        commit_message="Auto-update: Top SFM holders"
     )
-    print("✅ Upload complet! Datele sunt live pe HuggingFace.")
+    print("✅ Upload complet!")
 
 if __name__ == "__main__":
     holders = get_top_holders()
