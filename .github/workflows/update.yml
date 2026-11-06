@@ -1,0 +1,26 @@
+name: Update SFM Index
+
+on:
+  schedule:
+    - cron: '*/10 * * * *' # Rulează la fiecare 10 minute
+  workflow_dispatch:      # Permite rularea manuală din buton
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run Indexer
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: python indexer.py
